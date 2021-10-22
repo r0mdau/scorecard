@@ -84,6 +84,46 @@ func TestRepoURI_ValidGitHubUrl(t *testing.T) {
 			args:    args{s: "https://github.com/foo/kubeflow"},
 			wantErr: false,
 		},
+		{
+			name: "Github username can't begin with hyphen",
+			fields: fields{
+				host:  "github.com",
+				owner: "-foo",
+				repo:  "kubeflow",
+			},
+			args:    args{s: "https://github.com/-foo/kubeflow"},
+			wantErr: true,
+		},
+		{
+			name: "Github username can't end with hyphen",
+			fields: fields{
+				host:  "github.com",
+				owner: "foo-",
+				repo:  "kubeflow",
+			},
+			args:    args{s: "https://github.com/foo-/kubeflow"},
+			wantErr: true,
+		},
+		{
+			name: "Github username can't be longer than 39 characters",
+			fields: fields{
+				host:  "github.com",
+				owner: "azertybarfooazertyfoobarazertyfoobarazer",
+				repo:  "kubeflow",
+			},
+			args:    args{s: "https://github.com/azertybarfooazertyfoobarazertyfoobarazer/kubeflow"},
+			wantErr: true,
+		},
+		{
+			name: "Github username can't contain 2 or more consecutive hyphens",
+			fields: fields{
+				host:  "github.com",
+				owner: "foo--bar",
+				repo:  "kubeflow",
+			},
+			args:    args{s: "https://github.com/foo--bar/kubeflow"},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		tt := tt // Re-initializing variable so it is not changed while executing the closure below

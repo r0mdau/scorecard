@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/google/go-cmp/cmp"
@@ -33,6 +34,8 @@ var (
 	ErrorUnsupportedhost = errors.New("unsupported host")
 	// ErrorInvalidGithubURL indicates the repo's GitHub URL is not in the proper format.
 	ErrorInvalidGithubURL = errors.New("invalid GitHub repo URL")
+	// ErrorInvalidGithubUsername indicates the repo's GitHub Username is not in the proper format.
+	ErrorInvalidGithubUsername = errors.New("invalid GitHub repo Username")
 	// ErrorInvalidURL indicates the repo's full GitHub URL was not passed.
 	ErrorInvalidURL = errors.New("invalid repo flag")
 	// errInvalidRepoType indicates the repo's type is invalid.
@@ -246,6 +249,11 @@ func (r *RepoURI) Set(s string) error {
 func (r *RepoURI) IsValidGitHubURL() error {
 	switch r.url.host {
 	case "github.com":
+		// Username may only contain alphanumeric characters or single hyphens, cannot begin or end with a hyphen and max length of 39.
+		match, err := regexp.MatchString("^[a-zA-Z0-9][-a-zA-Z0-9]{0,37}[a-zA-Z0-9]$", r.url.owner)
+		if !match || strings.Contains(r.url.owner, "--") || err != nil {
+			return sce.WithMessage(ErrorInvalidGithubUsername, r.url.owner)
+		}
 	default:
 		return sce.WithMessage(ErrorUnsupportedhost, r.url.host)
 	}
